@@ -49,7 +49,7 @@ if ticker:
 
     if not stock_data.empty:
         # 显示当前价格
-        current_price = stock_data["Close"].iloc[-1]
+        current_price = float(stock_data["Close"].iloc[-1])
         st.write(f"Current price of {ticker}: ${current_price:.2f}")
 
         # 绘制互动图表
