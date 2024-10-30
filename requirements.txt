@@ -1,2 +1,5 @@
 streamlit
 scipy
+yfinance
+plotly
+datetime
