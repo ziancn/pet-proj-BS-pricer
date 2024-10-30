@@ -30,7 +30,7 @@ import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from utils import black_scholes
+from utils.black_scholes import black_scholes
 
 # 设置应用标题
 st.title("Enhanced Option Pricer with Stock Data")
