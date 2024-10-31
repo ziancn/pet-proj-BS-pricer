@@ -39,7 +39,7 @@ with k_col2:
         strike_px = (spot_px * strike_pct) / 100
 
 # Maturity
-t = st.sidebar.number_input('Time to maturity (Years)', value=1)
+t = st.sidebar.number_input('Time to maturity (Years)', value=1.0)
 
 # Risk free rate
 rfr = st.sidebar.number_input('Risk free rate', value=risk_free_rate if use_live_data else 0.04, format="%.4f")
