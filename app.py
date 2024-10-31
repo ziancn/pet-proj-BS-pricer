@@ -1,81 +1,136 @@
-# import streamlit as st
-
-# # 创建标题和副标题
-# st.title("Bloomberg-Style Option Pricer")
-# st.write("Replicating OVME option pricing interface")
-
-# # 创建左、右两栏布局
-# col1, col2 = st.columns(2)
-
-# # 左侧：基本输入
-# with col1:
-#     st.header("Option Parameters")
-#     stock_price = st.number_input("Stock Price (S)", value=100.0)
-#     strike_price = st.number_input("Strike Price (K)", value=100.0)
-#     maturity = st.slider("Time to Maturity (T, in years)", 0.1, 5.0, 1.0)
-#     risk_free_rate = st.number_input("Risk-Free Rate (r)", value=0.05)
-#     volatility = st.number_input("Volatility (σ)", value=0.2)
-#     option_type = st.selectbox("Option Type", ["call", "put"])
-
-# # 右侧：计算结果显示
-# with col2:
-#     st.header("Calculated Option Price")
-#     # Example calculation (using a placeholder function)
-#     # result = black_scholes(stock_price, strike_price, maturity, risk_free_rate, volatility, option_type)
-#     result = 12.34  # 假设的期权价格
-#     st.write(f"The {option_type} option price is: ${result:.2f}")
-
-
 import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-from utils.black_scholes import black_scholes
+from utils import black_scholes, calc_hist_vol
 
-# 设置应用标题
-st.title("Enhanced Option Pricer with Stock Data")
+# Page configuration
+st.set_page_config(
+    page_title='Naïve Option Pricer',
+    page_icon='🧸',
+    layout='wide')
+#  Zian Chen LinkedIn link
+profile_url = 'https://www.linkedin.com/in/zian-zayn-chen'
+icon_url = 'https://cdn-icons-png.flaticon.com/512/174/174857.png'
+st.sidebar.markdown(f'<a href="{profile_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="{icon_url}" width="16" height="16" style="vertical-align: middle; margin-right: 10px;">`Zian (Zayn) Chen`</a>', unsafe_allow_html=True)
 
-# 输入股票代码
-ticker = st.text_input("Enter Stock Ticker:", value="AAPL")
+# SIDEBAR #
+st.sidebar.title('Naïve Option Pricer')
 
-# 定义日期范围选择
-end_date = st.date_input("End Date", value=datetime.today())
-start_date = st.date_input("Start Date", value=end_date - timedelta(days=365))
+use_live_data = st.sidebar.checkbox('Use live data', value=True)
 
-# 获取数据
-if ticker:
-    # 使用yfinance查询股票数据
-    stock_data = yf.download(ticker, start=start_date, end=end_date)
+ticker = st.sidebar.text_input('Underlying Ticker', value='AAPL')
 
-    if not stock_data.empty:
-        # 显示当前价格
-        current_price = float(stock_data["Close"].iloc[-1])
-        st.write(f"Current price of {ticker}: ${current_price:.2f}")
+if use_live_data:
+    stock = yf.Ticker(ticker)
+    last_px = stock.info['currentPrice']
+    risk_free_rate = yf.Ticker('^IRX').history(period="1d")['Close'][-1] / 100
 
-        # 绘制互动图表
+spot_px = st.sidebar.number_input('Spot Price', value=last_px if use_live_data else 100)
+
+# Strike Price
+k_col1, k_col2 = st.sidebar.columns([2,3])
+with k_col1:
+    strike_input_method = st.selectbox('Strike', ('Price', 'Percent'))
+with k_col2:
+    if strike_input_method == 'Price':
+        strike_px = st.number_input('Strike Price', value=spot_px)
+    else:
+        strike_pct = st.number_input('% of Spot', value=100.0)
+        strike_px = (spot_px * strike_pct) / 100
+
+# Maturity
+t = st.sidebar.number_input('Time to maturity (Years)', value=1)
+
+# Risk free rate
+rfr = st.sidebar.number_input('Risk free rate', value=risk_free_rate if use_live_data else 0.04, format="%.4f")
+
+# Volatility
+v_col1, v_col2 = st.sidebar.columns([2,3])
+with v_col1:
+    vol_type = st.selectbox('Vol Type', ['Hist 6mo', 'Hist 3mo', 'Hist 1mo'])
+    period = vol_type.split()[-1]
+
+if use_live_data and ticker:
+    try:
+        vol_value = calc_hist_vol(ticker, period)
+    except Exception as e:
+        st.error(f"Failed to fetch data for {ticker}: {e}")
+        vol_value = 0.2
+else:
+    vol_value = 0.2
+
+with v_col2:
+    vol = st.number_input('Vol', value=vol_value, disabled=True if use_live_data else False)
+
+# Main Page
+
+call_px = black_scholes(
+    S=spot_px,
+    K=strike_px,
+    T=t,
+    sigma=vol_value,
+    r=rfr,
+    option_type='call')
+
+put_px = black_scholes(
+    S=spot_px,
+    K=strike_px,
+    T=t,
+    sigma=vol_value,
+    r=rfr,
+    option_type='put')
+
+if use_live_data and ticker:
+    try:
+        stock_data = yf.Ticker(ticker).history(period="1y")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=stock_data.index, y=stock_data["Close"], mode="lines", name="Close Price"))
         fig.update_layout(
-            title=f"{ticker} Stock Price",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            hovermode="x unified"
-        )
-        
-        # 显示互动图表
+            title=f'{ticker} - 1Y',
+            template="plotly_dark")
         st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.error(f"Failed to fetch data for {ticker}: {e}")
 
-        # 其余的Black-Scholes期权计算部分可以放在这里
-        st.header("Option Parameters")
-        strike_price = st.number_input("Strike Price (K)", value=float(current_price))
-        maturity = st.slider("Time to Maturity (T, in years)", 0.1, 5.0, 1.0)
-        risk_free_rate = st.number_input("Risk-Free Rate (r)", value=0.05)
-        volatility = st.number_input("Volatility (σ)", value=0.2)
-        option_type = st.selectbox("Option Type", ["call", "put"])
-
-        # Black-Scholes 计算函数（假设已经定义在其他文件中）
-        result = black_scholes(current_price, strike_price, maturity, risk_free_rate, volatility, option_type)
-        result = 12.34  # 示例结果
-        st.write(f"The {option_type} option price is: ${result:.2f}")
-    else:
-        st.write("No data found for the provided ticker symbol.")
+st.markdown(f"""
+    <style>
+    .card-container {{
+        display: flex;
+        gap: 1rem;
+        withth: 100%;
+        margin: 0;
+    }}
+    .card {{
+        flex-grow: 1;               
+        min-width: 150px;    
+        padding: 20px;
+        margin: 10px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+    }}
+    .call-card {{
+        background-color: #b8f1b0;
+        color: #006400;
+    }}
+    .put-card {{
+        background-color: #f1b0b0;
+        color: #8b0000;
+    }}
+    </style>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <div class="card call-card">
+            CALL Px<br>
+            Price: ${call_px:.2f} <br>
+            Price (%): {call_px/spot_px*100:.2f}%
+        </div>
+        <div class="card put-card">
+            PUT Px<br>
+            ${put_px:.2f} <br>
+            Price (%): {put_px/spot_px*100:.2f}%
+        </div>
+    </div>
+""", unsafe_allow_html=True)

@@ -3,3 +3,5 @@ scipy
 yfinance
 plotly
 datetime
+pandas
+numpy
