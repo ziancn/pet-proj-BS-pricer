@@ -18,7 +18,7 @@ st.sidebar.title('Naïve Option Pricer')
 
 use_live_data = st.sidebar.checkbox('Use live data', value=True)
 
-ticker = st.sidebar.text_input('Underlying Ticker', value='AAPL')
+ticker = st.sidebar.text_input('Underlying Ticker', value='AAPL', disabled=False if use_live_data else True)
 
 if use_live_data:
     stock = yf.Ticker(ticker)
