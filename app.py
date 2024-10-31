@@ -47,7 +47,7 @@ rfr = st.sidebar.number_input('Risk free rate', value=risk_free_rate if use_live
 # Volatility
 v_col1, v_col2 = st.sidebar.columns([2,3])
 with v_col1:
-    vol_type = st.selectbox('Vol Type', ['Hist 6mo', 'Hist 3mo', 'Hist 1mo'], disabled=True if use_live_data else False)
+    vol_type = st.selectbox('Vol Type', ['Hist 6mo', 'Hist 3mo', 'Hist 1mo'], disabled=False if use_live_data else True)
     period = vol_type.split()[-1]
 
 if use_live_data and ticker:
