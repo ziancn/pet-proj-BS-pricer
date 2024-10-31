@@ -103,12 +103,11 @@ st.markdown(f"""
     .card {{
         flex-grow: 1;               
         min-width: 150px;    
-        padding: 20px;
-        margin: 10px;
+        padding: 1rem;
         border-radius: 10px;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
         text-align: center;
-        font-size: 20px;
+        font-size: 1rem;
         font-weight: bold;
     }}
     .call-card {{
