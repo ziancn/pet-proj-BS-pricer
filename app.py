@@ -1,7 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
-from utils import black_scholes, calc_hist_vol
+from utils import black_scholes, calc_hist_vol, get_risk_free_rate
 
 # Page configuration
 st.set_page_config(
@@ -24,17 +24,7 @@ if use_live_data:
     stock = yf.Ticker(ticker)
     last_px = stock.info['currentPrice']
     # Query a risk free rate reference:
-    try:
-        risk_free_data = yf.Ticker('^IRX').history(period="1d")
-        if not risk_free_data.empty and 'Close' in risk_free_data.columns:
-            risk_free_rate = risk_free_data['Close'].iloc[-1] / 100
-        else:
-            raise ValueError("Unable to get ^IRX data from yfinance.")
-    except Exception as e:
-        print(f"Error to get live risk-free-rate: {e}")
-        # 设置一个默认的无风险利率，比如 0.02（2%）作为备用值
-        print('Set risk_free_rate to 2% p.a.')
-        risk_free_rate = 0.02
+    risk_free_rate = get_risk_free_rate()
 
 spot_px = st.sidebar.number_input('Spot Price', value=last_px if use_live_data else 100)
 

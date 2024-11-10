@@ -1,4 +1,5 @@
 import math
+import streamlit as st
 from scipy.stats import norm
 import numpy as np
 import yfinance as yf
@@ -18,3 +19,15 @@ def calc_hist_vol(ticker, period):
     log_returns = np.log(data / data.shift(1)).dropna()
     hist_vol = log_returns.std() * np.sqrt(252)  # Annualise
     return hist_vol.iloc[0]
+
+@st.cache_data
+def get_risk_free_rate():
+    try:
+        risk_free_data = yf.Ticker('^IRX').history(period="1d")
+        if not risk_free_data.empty and 'Close' in risk_free_data.columns:
+            return risk_free_data['Close'].iloc[-1] / 100
+        else:
+            return 0.02
+    except Exception as e:
+        print(f"获取无风险利率时出错: {e}")
+        return 0.02
