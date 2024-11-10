@@ -23,11 +23,11 @@ def calc_hist_vol(ticker, period):
     hist_vol = log_returns.std() * np.sqrt(252)  # Annualise
     return hist_vol.iloc[0]
 
-@st.cache_data
+@st.cache_data(ttl=86400)
 def get_risk_free_rate():
     try:
-        risk_free_data = yf.Ticker('^IRX').history(period="1d")
-        logging.info(f'^IRX data: {risk_free_data}')
+        risk_free_data = yf.Ticker('^TNX').history(period="1d")
+        logging.info(f'^TNX data: {risk_free_data}')
         if not risk_free_data.empty and 'Close' in risk_free_data.columns:
             return risk_free_data['Close'].iloc[-1] / 100
         else:
