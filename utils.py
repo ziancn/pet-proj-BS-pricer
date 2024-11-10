@@ -3,6 +3,9 @@ import streamlit as st
 from scipy.stats import norm
 import numpy as np
 import yfinance as yf
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def black_scholes(S, K, T, r, sigma, option_type="call"):
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
@@ -24,10 +27,11 @@ def calc_hist_vol(ticker, period):
 def get_risk_free_rate():
     try:
         risk_free_data = yf.Ticker('^IRX').history(period="1d")
+        logging.info(f'^IRX data: {risk_free_data}')
         if not risk_free_data.empty and 'Close' in risk_free_data.columns:
             return risk_free_data['Close'].iloc[-1] / 100
         else:
             return 0.02
     except Exception as e:
-        print(f"获取无风险利率时出错: {e}")
+        print(f"Error querying live risk free rate data: {e}")
         return 0.02
