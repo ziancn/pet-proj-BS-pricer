@@ -28,7 +28,10 @@ def get_risk_free_rate():
     try:
         risk_free_rate = yf.Ticker('^IRX').fast_info.get('lastPrice', None)
         logging.info(f'^IRX data: {risk_free_rate}')
-        return risk_free_rate
+        if risk_free_rate:
+            return risk_free_rate / 100
+        else:
+            return 0.02
     except Exception as e:
         print(f"Error querying live risk free rate data: {e}")
         return 0.02
