@@ -26,12 +26,9 @@ def calc_hist_vol(ticker, period):
 @st.cache_data(ttl=86400)
 def get_risk_free_rate():
     try:
-        risk_free_data = yf.Ticker('^TNX').history(period="1d")
-        logging.info(f'^TNX data: {risk_free_data}')
-        if not risk_free_data.empty and 'Close' in risk_free_data.columns:
-            return risk_free_data['Close'].iloc[-1] / 100
-        else:
-            return 0.02
+        risk_free_rate = yf.Ticker('^IRX').fast_info.get('lastPrice', None)
+        logging.info(f'^IRX data: {risk_free_rate}')
+        return risk_free_rate
     except Exception as e:
         print(f"Error querying live risk free rate data: {e}")
         return 0.02
