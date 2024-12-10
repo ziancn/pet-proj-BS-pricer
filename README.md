@@ -17,7 +17,7 @@ BSPricer is a lightweight web app for calculating European option prices using t
 
 1. Clone the repo:
     ```bash
-    git clone https://github.com/your-username/your-repo-name.git
+    git clone https://github.com/ziancn/pet-proj-BS-pricer.git
     ```
 2. Install dependencies:
     ```bash
